@@ -1,7 +1,6 @@
 import streamlit as st
 import pickle
 import numpy as np
-import base64
 import time
 
 # ---------------- PAGE CONFIG ----------------
@@ -10,85 +9,76 @@ st.set_page_config(
     layout="centered"
 )
 
-# ---------------- BACKGROUND + GLASS UI ----------------
-def set_background(image_file):
-    with open(image_file, "rb") as f:
-        encoded = base64.b64encode(f.read()).decode()
+# ---------------- LIGHTWEIGHT GRADIENT BACKGROUND ----------------
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+}
 
-    st.markdown(f"""
-    <style>
+/* Glass container without heavy blur */
+.block-container {
+    background: rgba(255,255,255,0.08);
+    padding: 40px;
+    border-radius: 20px;
+}
 
-    .stApp {{
-        background: linear-gradient(135deg, #1e3c72, #2a5298);
-        background-image: url("data:image/jpg;base64,{encoded}");
-        background-size: cover;
-        background-attachment: fixed;
-        background-blend-mode: overlay;
-    }}
+/* Title styling */
+h1 {
+    text-align: center;
+    font-size: 2.3em;
+    font-weight: 700;
+}
 
-    .block-container {{
-        background: rgba(255,255,255,0.15);
-        padding: 40px;
-        border-radius: 25px;
-        backdrop-filter: blur(20px);
-        box-shadow: 0px 10px 40px rgba(0,0,0,0.3);
-    }}
+/* Subtitle */
+.subtitle {
+    text-align: center;
+    margin-bottom: 20px;
+    opacity: 0.85;
+}
 
-    h1 {{
-        text-align: center;
-        font-size: 2.5em;
-        font-weight: 700;
-    }}
+/* Textarea */
+.stTextArea textarea {
+    border-radius: 12px !important;
+    padding: 12px !important;
+}
 
-    .subtitle {{
-        text-align: center;
-        margin-bottom: 20px;
-        opacity: 0.85;
-    }}
+/* Button */
+.stButton>button {
+    background: linear-gradient(135deg,#00c6ff,#0072ff);
+    color: white;
+    border-radius: 12px;
+    height: 3em;
+    font-weight: 600;
+    border: none;
+    transition: 0.3s;
+}
 
-    .stTextArea textarea {{
-        border-radius: 12px !important;
-        padding: 12px !important;
-    }}
+.stButton>button:hover {
+    transform: translateY(-2px);
+}
 
-    .stButton>button {{
-        background: linear-gradient(135deg,#00c6ff,#0072ff);
-        color: white;
-        border-radius: 12px;
-        height: 3em;
-        font-weight: 600;
-        border: none;
-        transition: 0.3s;
-    }}
+/* Result Card */
+.result-card {
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 20px;
+    animation: fadeIn 0.5s ease-in-out;
+}
 
-    .stButton>button:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0px 5px 20px rgba(0,0,0,0.4);
-    }}
+@keyframes fadeIn {
+    from {opacity:0; transform:translateY(10px);}
+    to {opacity:1; transform:translateY(0);}
+}
 
-    .result-card {{
-        padding: 25px;
-        border-radius: 20px;
-        margin-top: 20px;
-        animation: fadeIn 0.7s ease-in-out;
-    }}
-
-    @keyframes fadeIn {{
-        from {{opacity:0; transform:translateY(10px);}}
-        to {{opacity:1; transform:translateY(0);}}
-    }}
-
-    .footer {{
-        text-align:center;
-        margin-top:30px;
-        font-size:14px;
-        opacity:0.8;
-    }}
-
-    </style>
-    """, unsafe_allow_html=True)
-
-set_background("bg.jfif")
+.footer {
+    text-align:center;
+    margin-top:30px;
+    font-size:14px;
+    opacity:0.8;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------- LOAD MODEL ----------------
 @st.cache_resource
@@ -146,27 +136,28 @@ if st.button("Run AI Analysis"):
 
         st.markdown("## Model Output")
 
+        # Faster progress animation
         progress = st.progress(0)
         for i in range(int(confidence * 100)):
             progress.progress(i + 1)
-            time.sleep(0.01)
+            time.sleep(0.002)  # very small delay for speed
 
         if prediction[0] == 1:
-            st.markdown(f"""
+            st.markdown("""
             <div class="result-card" style="
                 background: rgba(255,0,0,0.1);
-                border-left: 8px solid #ff1744;">
+                border-left: 6px solid #ff1744;">
                 <h2 style="color:#ff1744;">SPAM CLASSIFICATION</h2>
                 <p>Model predicts this email as Spam.</p>
             </div>
             """, unsafe_allow_html=True)
 
         else:
-            st.balloons()
-            st.markdown(f"""
+            st.balloons()  # Confetti animation
+            st.markdown("""
             <div class="result-card" style="
                 background: rgba(0,255,150,0.1);
-                border-left: 8px solid #00e676;">
+                border-left: 6px solid #00e676;">
                 <h2 style="color:#00e676;">HAM CLASSIFICATION</h2>
                 <p>Model predicts this email as Legitimate.</p>
             </div>
