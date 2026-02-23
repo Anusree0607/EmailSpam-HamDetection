@@ -10,19 +10,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# ---------------- THEME SETTINGS ----------------
-theme = st.get_option("theme.base")
-
-if theme == "light":
-    overlay = "rgba(255,255,255,0.75)"
-    text_color = "#111111"
-    sub_color = "#333333"
-else:
-    overlay = "rgba(15,25,45,0.75)"
-    text_color = "#ffffff"
-    sub_color = "#cccccc"
-
-# ---------------- BACKGROUND ----------------
+# ---------------- BACKGROUND + GLASS UI ----------------
 def set_background(image_file):
     with open(image_file, "rb") as f:
         encoded = base64.b64encode(f.read()).decode()
@@ -39,33 +27,26 @@ def set_background(image_file):
     }}
 
     .block-container {{
-        background: {overlay};
+        background: rgba(255,255,255,0.15);
         padding: 40px;
         border-radius: 25px;
-        backdrop-filter: blur(18px);
+        backdrop-filter: blur(20px);
         box-shadow: 0px 10px 40px rgba(0,0,0,0.3);
     }}
 
     h1 {{
         text-align: center;
         font-size: 2.5em;
-        color: {text_color} !important;
         font-weight: 700;
     }}
 
     .subtitle {{
         text-align: center;
-        color: {sub_color};
         margin-bottom: 20px;
-    }}
-
-    label, p, div {{
-        color: {text_color} !important;
+        opacity: 0.85;
     }}
 
     .stTextArea textarea {{
-        background: rgba(255,255,255,0.15) !important;
-        color: {text_color} !important;
         border-radius: 12px !important;
         padding: 12px !important;
     }}
@@ -101,7 +82,7 @@ def set_background(image_file):
         text-align:center;
         margin-top:30px;
         font-size:14px;
-        color:{sub_color};
+        opacity:0.8;
     }}
 
     </style>
@@ -181,7 +162,7 @@ if st.button("Run AI Analysis"):
             """, unsafe_allow_html=True)
 
         else:
-            st.balloons()  # 🎇 Confetti effect
+            st.balloons()
             st.markdown(f"""
             <div class="result-card" style="
                 background: rgba(0,255,150,0.1);
