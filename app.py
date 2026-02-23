@@ -2,6 +2,7 @@ import streamlit as st
 import pickle
 import numpy as np
 import base64
+import time
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(
@@ -9,6 +10,14 @@ st.set_page_config(
     page_icon="📧",
     layout="centered"
 )
+
+# ---------- THEME DETECTION ----------
+theme = st.get_option("theme.base")
+
+if theme == "light":
+    overlay_color = "rgba(255, 255, 255, 0.85)"
+else:
+    overlay_color = "rgba(20, 30, 50, 0.85)"
 
 # ---------- FUNCTION TO LOAD BACKGROUND IMAGE ----------
 def set_background(image_file):
@@ -31,64 +40,65 @@ def set_background(image_file):
             background-attachment: fixed;
         }}
 
-        /* Main container styling */
         .block-container {{
-            background: rgba(20, 30, 50, 0.85);
+            background: {overlay_color};
             padding: 40px;
             border-radius: 20px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
         }}
 
-        /* Headings */
         h1, h2, h3 {{
             color: var(--text-color);
             font-weight: 700;
-            letter-spacing: 0.5px;
         }}
 
         h1 {{
             text-align: center;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.4em;
         }}
 
-        /* Buttons */
         .stButton>button {{
             background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
             color: white;
-            font-size: 16px;
             font-weight: 600;
             border-radius: 12px;
-            height: 3.2em;
+            height: 3em;
             width: 100%;
             border: none;
             transition: 0.3s ease;
         }}
 
         .stButton>button:hover {{
-            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
             transform: translateY(-2px);
         }}
 
-        /* Text Area */
         .stTextArea textarea {{
-            background-color: rgba(255,255,255,0.08) !important;
+            background-color: rgba(255,255,255,0.1) !important;
             color: var(--text-color) !important;
             border-radius: 10px !important;
             padding: 12px !important;
         }}
 
-        /* Labels */
         label {{
             color: var(--text-color) !important;
-            font-weight: 500 !important;
         }}
 
-        /* Footer */
-        .footer-text {{
-            text-align: center;
-            margin-top: 30px;
-            font-size: 14px;
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(10px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        .result-card {{
+            padding: 20px;
+            border-radius: 15px;
+            animation: fadeIn 0.8s ease-in-out;
+            margin-top: 15px;
+        }}
+
+        .footer {{
+            text-align:center;
+            margin-top:30px;
+            font-size:14px;
             color: var(--text-color);
         }}
 
@@ -100,7 +110,7 @@ def set_background(image_file):
 # ---------- SET BACKGROUND ----------
 set_background("bg.jfif")
 
-# ---------- LOAD MODEL SAFELY ----------
+# ---------- LOAD MODEL ----------
 @st.cache_resource
 def load_model():
     model = pickle.load(open("spam_model.pkl", "rb"))
@@ -109,16 +119,16 @@ def load_model():
 
 model, vectorizer = load_model()
 
-# ---------- PAGE TITLE ----------
+# ---------- TITLE ----------
 st.markdown("<h1>📧 Email Spam Detection System</h1>", unsafe_allow_html=True)
 st.markdown(
-    "<p style='text-align:center; font-size:16px;'>Enterprise-Grade Email Classification</p>",
+    "<p style='text-align:center;'>Enterprise-Grade Email Classification</p>",
     unsafe_allow_html=True
 )
 
 st.markdown("---")
 
-# ---------- INPUT METHOD ----------
+# ---------- INPUT ----------
 option = st.radio(
     "Select Input Method:",
     ("Paste Email Text", "Upload Email File (.txt)")
@@ -159,19 +169,45 @@ if st.button("🔍 Analyze Email"):
                 confidence = 0.99
 
         st.markdown("## 📊 Analysis Result")
-        st.progress(float(confidence))
 
+        # Animated progress
+        progress_bar = st.progress(0)
+        for i in range(int(confidence * 100) + 1):
+            progress_bar.progress(i)
+            time.sleep(0.01)
+
+        # Result card
         if prediction[0] == 1:
-            st.error("🚨 SPAM EMAIL DETECTED")
+            st.markdown(
+                f"""
+                <div class="result-card" style="
+                    background: rgba(255,0,0,0.1);
+                    border-left: 6px solid #ff4b4b;">
+                    <h2 style="color:#ff4b4b;">🚨 SPAM EMAIL DETECTED</h2>
+                    <p>This email appears to be spam.</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
         else:
-            st.success("✅ LEGITIMATE EMAIL (HAM)")
+            st.markdown(
+                f"""
+                <div class="result-card" style="
+                    background: rgba(0,200,100,0.1);
+                    border-left: 6px solid #00c853;">
+                    <h2 style="color:#00c853;">✅ LEGITIMATE EMAIL (HAM)</h2>
+                    <p>This email appears safe and legitimate.</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-        st.markdown(f"### Confidence Score: {confidence*100:.2f}%")
+        st.markdown(f"### 🎯 Confidence Score: {confidence*100:.2f}%")
 
 # ---------- FOOTER ----------
 st.markdown(
     """
-    <div class="footer-text">
+    <div class="footer">
         🔧 Built with Scikit-learn & Streamlit | 🚀 Powered by Machine Learning
     </div>
     """,
