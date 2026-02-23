@@ -7,7 +7,6 @@ import time
 # ---------- PAGE CONFIG ----------
 st.set_page_config(
     page_title="Email Spam Detection",
-    page_icon="📧",
     layout="centered"
 )
 
@@ -15,11 +14,15 @@ st.set_page_config(
 theme = st.get_option("theme.base")
 
 if theme == "light":
-    overlay_color = "rgba(255, 255, 255, 0.85)"
+    overlay_color = "rgba(255, 255, 255, 0.95)"
+    text_color = "#111111"
+    sub_text_color = "#333333"
 else:
-    overlay_color = "rgba(20, 30, 50, 0.85)"
+    overlay_color = "rgba(20, 30, 50, 0.90)"
+    text_color = "#ffffff"
+    sub_text_color = "#dddddd"
 
-# ---------- FUNCTION TO LOAD BACKGROUND IMAGE ----------
+# ---------- BACKGROUND FUNCTION ----------
 def set_background(image_file):
     with open(image_file, "rb") as f:
         encoded = base64.b64encode(f.read()).decode()
@@ -27,11 +30,6 @@ def set_background(image_file):
     st.markdown(
         f"""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
-        * {{
-            font-family: 'Poppins', sans-serif;
-        }}
 
         .stApp {{
             background-image: url("data:image/jpg;base64,{encoded}");
@@ -44,43 +42,51 @@ def set_background(image_file):
             background: {overlay_color};
             padding: 40px;
             border-radius: 20px;
-            backdrop-filter: blur(12px);
-        }}
-
-        h1, h2, h3 {{
-            color: var(--text-color);
-            font-weight: 700;
+            backdrop-filter: blur(10px);
         }}
 
         h1 {{
+            color: {text_color} !important;
             text-align: center;
-            font-size: 2.4em;
+            font-size: 2.2em;
         }}
 
-        .stButton>button {{
-            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
-            color: white;
-            font-weight: 600;
-            border-radius: 12px;
-            height: 3em;
-            width: 100%;
-            border: none;
-            transition: 0.3s ease;
+        p, label, div {{
+            color: {text_color} !important;
         }}
 
-        .stButton>button:hover {{
-            transform: translateY(-2px);
+        .subtext {{
+            color: {sub_text_color} !important;
+            text-align: center;
+            font-size: 1em;
+            margin-bottom: 15px;
         }}
 
         .stTextArea textarea {{
-            background-color: rgba(255,255,255,0.1) !important;
-            color: var(--text-color) !important;
+            background-color: rgba(0,0,0,0.05) !important;
+            color: {text_color} !important;
             border-radius: 10px !important;
-            padding: 12px !important;
         }}
 
-        label {{
-            color: var(--text-color) !important;
+        .stButton>button {{
+            background-color: #1565c0;
+            color: white;
+            font-weight: 600;
+            border-radius: 10px;
+            height: 3em;
+            width: 100%;
+            border: none;
+        }}
+
+        .stButton>button:hover {{
+            background-color: #0d47a1;
+        }}
+
+        .result-card {{
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            animation: fadeIn 0.6s ease-in-out;
         }}
 
         @keyframes fadeIn {{
@@ -88,18 +94,11 @@ def set_background(image_file):
             to {{ opacity: 1; transform: translateY(0); }}
         }}
 
-        .result-card {{
-            padding: 20px;
-            border-radius: 15px;
-            animation: fadeIn 0.8s ease-in-out;
-            margin-top: 15px;
-        }}
-
         .footer {{
             text-align:center;
             margin-top:30px;
             font-size:14px;
-            color: var(--text-color);
+            color:{sub_text_color};
         }}
 
         </style>
@@ -107,7 +106,7 @@ def set_background(image_file):
         unsafe_allow_html=True
     )
 
-# ---------- SET BACKGROUND ----------
+# ---------- APPLY BACKGROUND ----------
 set_background("bg.jfif")
 
 # ---------- LOAD MODEL ----------
@@ -120,9 +119,9 @@ def load_model():
 model, vectorizer = load_model()
 
 # ---------- TITLE ----------
-st.markdown("<h1>📧 Email Spam Detection System</h1>", unsafe_allow_html=True)
+st.markdown("<h1>Email Spam Detection System</h1>", unsafe_allow_html=True)
 st.markdown(
-    "<p style='text-align:center;'>Enterprise-Grade Email Classification</p>",
+    "<div class='subtext'>Machine Learning Based Email Classification</div>",
     unsafe_allow_html=True
 )
 
@@ -139,8 +138,7 @@ email_content = ""
 if option == "Paste Email Text":
     email_content = st.text_area(
         "Enter Email Content Below:",
-        height=200,
-        placeholder="Type or paste the email message here..."
+        height=200
     )
 
 elif option == "Upload Email File (.txt)":
@@ -153,12 +151,12 @@ elif option == "Upload Email File (.txt)":
 st.markdown("---")
 
 # ---------- PREDICTION ----------
-if st.button("🔍 Analyze Email"):
+if st.button("Analyze Email"):
 
     if email_content.strip() == "":
         st.warning("Please provide email content.")
     else:
-        with st.spinner("Analyzing email..."):
+        with st.spinner("Processing..."):
             input_data = vectorizer.transform([email_content])
             prediction = model.predict(input_data)
 
@@ -168,22 +166,20 @@ if st.button("🔍 Analyze Email"):
             else:
                 confidence = 0.99
 
-        st.markdown("## 📊 Analysis Result")
+        st.markdown("## Analysis Result")
 
-        # Animated progress
         progress_bar = st.progress(0)
         for i in range(int(confidence * 100) + 1):
             progress_bar.progress(i)
             time.sleep(0.01)
 
-        # Result card
         if prediction[0] == 1:
             st.markdown(
                 f"""
                 <div class="result-card" style="
-                    background: rgba(255,0,0,0.1);
-                    border-left: 6px solid #ff4b4b;">
-                    <h2 style="color:#ff4b4b;">🚨 SPAM EMAIL DETECTED</h2>
+                    background: rgba(255,0,0,0.08);
+                    border-left: 6px solid #d32f2f;">
+                    <h2 style="color:#d32f2f;">SPAM EMAIL DETECTED</h2>
                     <p>This email appears to be spam.</p>
                 </div>
                 """,
@@ -193,22 +189,22 @@ if st.button("🔍 Analyze Email"):
             st.markdown(
                 f"""
                 <div class="result-card" style="
-                    background: rgba(0,200,100,0.1);
-                    border-left: 6px solid #00c853;">
-                    <h2 style="color:#00c853;">✅ LEGITIMATE EMAIL (HAM)</h2>
+                    background: rgba(0,150,80,0.08);
+                    border-left: 6px solid #2e7d32;">
+                    <h2 style="color:#2e7d32;">LEGITIMATE EMAIL (HAM)</h2>
                     <p>This email appears safe and legitimate.</p>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
-        st.markdown(f"### 🎯 Confidence Score: {confidence*100:.2f}%")
+        st.markdown(f"### Confidence Score: {confidence*100:.2f}%")
 
 # ---------- FOOTER ----------
 st.markdown(
     """
     <div class="footer">
-        🔧 Built with Scikit-learn & Streamlit | 🚀 Powered by Machine Learning
+        Built with Scikit-learn and Streamlit
     </div>
     """,
     unsafe_allow_html=True
