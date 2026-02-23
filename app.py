@@ -1,115 +1,84 @@
 import streamlit as st
 import pickle
 import numpy as np
-import base64
 import time
 
-# ---------- PAGE CONFIG ----------
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
-    page_title="Email Spam Detection",
+    page_title="AI Email Classification System",
     layout="centered"
 )
 
-# ---------- THEME DETECTION ----------
-theme = st.get_option("theme.base")
+# ---------------- FAST BACKGROUND IMAGE ----------------
+st.markdown("""
+<style>
+.stApp {
+    background-image: url("bg.jfif");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
 
-if theme == "light":
-    overlay_color = "rgba(255, 255, 255, 0.95)"
-    text_color = "#111111"
-    sub_text_color = "#333333"
-else:
-    overlay_color = "rgba(20, 30, 50, 0.90)"
-    text_color = "#ffffff"
-    sub_text_color = "#dddddd"
+/* Light glass effect without heavy blur */
+.block-container {
+    background: rgba(0, 0, 0, 0.45);
+    padding: 40px;
+    border-radius: 20px;
+}
 
-# ---------- BACKGROUND FUNCTION ----------
-def set_background(image_file):
-    with open(image_file, "rb") as f:
-        encoded = base64.b64encode(f.read()).decode()
+/* Title */
+h1 {
+    text-align: center;
+    font-size: 2.3em;
+    font-weight: 700;
+}
 
-    st.markdown(
-        f"""
-        <style>
+/* Subtitle */
+.subtitle {
+    text-align: center;
+    margin-bottom: 20px;
+    opacity: 0.85;
+}
 
-        .stApp {{
-            background-image: url("data:image/jpg;base64,{encoded}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }}
+/* Textarea */
+.stTextArea textarea {
+    border-radius: 12px !important;
+    padding: 12px !important;
+}
 
-        .block-container {{
-            background: {overlay_color};
-            padding: 40px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-        }}
+/* Button */
+.stButton>button {
+    background: linear-gradient(135deg,#00c6ff,#0072ff);
+    color: white;
+    border-radius: 12px;
+    height: 3em;
+    font-weight: 600;
+    border: none;
+}
 
-        h1 {{
-            color: {text_color} !important;
-            text-align: center;
-            font-size: 2.2em;
-        }}
+/* Result Card */
+.result-card {
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 20px;
+    animation: fadeIn 0.4s ease-in-out;
+}
 
-        p, label, div {{
-            color: {text_color} !important;
-        }}
+@keyframes fadeIn {
+    from {opacity:0; transform:translateY(10px);}
+    to {opacity:1; transform:translateY(0);}
+}
 
-        .subtext {{
-            color: {sub_text_color} !important;
-            text-align: center;
-            font-size: 1em;
-            margin-bottom: 15px;
-        }}
+.footer {
+    text-align:center;
+    margin-top:30px;
+    font-size:14px;
+    opacity:0.8;
+}
+</style>
+""", unsafe_allow_html=True)
 
-        .stTextArea textarea {{
-            background-color: rgba(0,0,0,0.05) !important;
-            color: {text_color} !important;
-            border-radius: 10px !important;
-        }}
-
-        .stButton>button {{
-            background-color: #1565c0;
-            color: white;
-            font-weight: 600;
-            border-radius: 10px;
-            height: 3em;
-            width: 100%;
-            border: none;
-        }}
-
-        .stButton>button:hover {{
-            background-color: #0d47a1;
-        }}
-
-        .result-card {{
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 15px;
-            animation: fadeIn 0.6s ease-in-out;
-        }}
-
-        @keyframes fadeIn {{
-            from {{ opacity: 0; transform: translateY(10px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
-        }}
-
-        .footer {{
-            text-align:center;
-            margin-top:30px;
-            font-size:14px;
-            color:{sub_text_color};
-        }}
-
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-# ---------- APPLY BACKGROUND ----------
-set_background("bg.jfif")
-
-# ---------- LOAD MODEL ----------
+# ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_model():
     model = pickle.load(open("spam_model.pkl", "rb"))
@@ -118,45 +87,42 @@ def load_model():
 
 model, vectorizer = load_model()
 
-# ---------- TITLE ----------
-st.markdown("<h1>Email Spam Detection System</h1>", unsafe_allow_html=True)
+# ---------------- TITLE ----------------
+st.markdown("<h1>AI Email Classification System</h1>", unsafe_allow_html=True)
 st.markdown(
-    "<div class='subtext'>Machine Learning Based Email Classification</div>",
+    "<div class='subtitle'>TF-IDF + Machine Learning Based Spam Detection Research Demo</div>",
     unsafe_allow_html=True
 )
 
 st.markdown("---")
 
-# ---------- INPUT ----------
+# ---------------- INPUT ----------------
 option = st.radio(
-    "Select Input Method:",
+    "Select Input Method",
     ("Paste Email Text", "Upload Email File (.txt)")
 )
 
 email_content = ""
 
 if option == "Paste Email Text":
-    email_content = st.text_area(
-        "Enter Email Content Below:",
-        height=200
-    )
+    email_content = st.text_area("Enter Email Content", height=200)
 
-elif option == "Upload Email File (.txt)":
-    uploaded_file = st.file_uploader("Upload Email File", type=["txt"])
-    if uploaded_file is not None:
+else:
+    uploaded_file = st.file_uploader("Upload .txt File", type=["txt"])
+    if uploaded_file:
         email_content = uploaded_file.read().decode("utf-8")
-        with st.expander("Preview Uploaded Email"):
+        with st.expander("Preview File"):
             st.write(email_content)
 
 st.markdown("---")
 
-# ---------- PREDICTION ----------
-if st.button("Analyze Email"):
+# ---------------- PREDICTION ----------------
+if st.button("Run AI Analysis"):
 
     if email_content.strip() == "":
-        st.warning("Please provide email content.")
+        st.warning("Please enter email content.")
     else:
-        with st.spinner("Processing..."):
+        with st.spinner("Running Model Inference..."):
             input_data = vectorizer.transform([email_content])
             prediction = model.predict(input_data)
 
@@ -166,46 +132,40 @@ if st.button("Analyze Email"):
             else:
                 confidence = 0.99
 
-        st.markdown("## Analysis Result")
+        st.markdown("## Model Output")
 
-        progress_bar = st.progress(0)
-        for i in range(int(confidence * 100) + 1):
-            progress_bar.progress(i)
-            time.sleep(0.01)
+        # Faster animation
+        progress = st.progress(0)
+        for i in range(int(confidence * 100)):
+            progress.progress(i + 1)
+            time.sleep(0.002)
 
         if prediction[0] == 1:
-            st.markdown(
-                f"""
-                <div class="result-card" style="
-                    background: rgba(255,0,0,0.08);
-                    border-left: 6px solid #d32f2f;">
-                    <h2 style="color:#d32f2f;">SPAM EMAIL DETECTED</h2>
-                    <p>This email appears to be spam.</p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.markdown("""
+            <div class="result-card" style="
+                background: rgba(255,0,0,0.15);
+                border-left: 6px solid #ff1744;">
+                <h2 style="color:#ff1744;">SPAM CLASSIFICATION</h2>
+                <p>Model predicts this email as Spam.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
         else:
-            st.markdown(
-                f"""
-                <div class="result-card" style="
-                    background: rgba(0,150,80,0.08);
-                    border-left: 6px solid #2e7d32;">
-                    <h2 style="color:#2e7d32;">LEGITIMATE EMAIL (HAM)</h2>
-                    <p>This email appears safe and legitimate.</p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.balloons()
+            st.markdown("""
+            <div class="result-card" style="
+                background: rgba(0,255,150,0.15);
+                border-left: 6px solid #00e676;">
+                <h2 style="color:#00e676;">HAM CLASSIFICATION</h2>
+                <p>Model predicts this email as Legitimate.</p>
+            </div>
+            """, unsafe_allow_html=True)
 
         st.markdown(f"### Confidence Score: {confidence*100:.2f}%")
 
-# ---------- FOOTER ----------
-st.markdown(
-    """
-    <div class="footer">
-        Built with Scikit-learn and Streamlit
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+# ---------------- FOOTER ----------------
+st.markdown("""
+<div class="footer">
+AI Research Demonstration | Built with Scikit-learn & Streamlit
+</div>
+""", unsafe_allow_html=True)
